@@ -467,7 +467,7 @@ def generate_tree(path_list: list, output: str) -> bool:
     return write_file(output, "\n")
 
 
-def validate_file_path(file_path: Path) -> tuple[bool, str]:
+def validate_file_path(file_path: Path) -> Tuple[bool, str]:
     """
     Validate if a file path is accessible and readable.
     
