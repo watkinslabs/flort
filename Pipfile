@@ -1,0 +1,16 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+argparse = "*"
+pytest = "*"
+
+[dev-packages]
+wl-version-manager = "*"
+setuptools = "*"
+twine = "*"
+pytest = "*"
+
+[requires]

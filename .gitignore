@@ -1,0 +1,13 @@
+__pycache__
+*.gz
+*egg*
+.vsco*
+*.lock
+*.flort
+junk
+Video
+t
+*.flort.txt
+build
+dist
+*egg*
