@@ -2,7 +2,7 @@
 
 [![License](https://img.shields.io/badge/license-BSD%203--Clause-blue.svg)](LICENSE)
 [![Python](https://img.shields.io/badge/python-3.6%2B-blue.svg)](https://python.org)
-[![Tests](https://img.shields.io/badge/tests-19%20passing-green.svg)](tests/)
+[![Tests](https://github.com/watkinslabs/flort/actions/workflows/test.yml/badge.svg)](https://github.com/watkinslabs/flort/actions/workflows/test.yml)
 
 
 ![Flort Logo](assets/flort-logo.png)
