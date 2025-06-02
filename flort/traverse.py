@@ -189,356 +189,6 @@ class FileFilter:
         except ValueError:
             return False
 
-
-def scan_directories(
-    directories: List[str],
-    file_filter: FileFilter,
-    max_depth: Optional[int] = None
-) -> List[Dict[str, Any]]:
-    """
-    Scan directories and return all matching files and directories.
-    
-    Args:
-        directories: List of directory paths to scan
-        file_filter: FileFilter instance with all filtering criteria
-        max_depth: Maximum depth to traverse (None for unlimited)
-        
-    Returns:
-        List of dictionaries with file/directory information
-    """
-    if not directories:
-        logging.error("No directories provided for scanning.")
-        return []
-
-    all_paths = []
-    processed_paths = set()
-    
-    for base_directory in directories:
-        base_path = Path(base_directory).resolve()
-        
-        if not base_path.exists():
-            logging.error(f"Directory does not exist: {base_directory}")
-            continue
-            
-        if not base_path.is_dir():
-            logging.error(f"Path is not a directory: {base_directory}")
-            continue
-        
-        if file_filter.should_ignore_directory(base_path):
-            logging.info(f"Skipping ignored directory: {base_path}")
-            continue
-
-        logging.info(f"Scanning directory: {base_path}")
-        
-        # Calculate parent for relative paths
-        parent_path = base_path.parent.resolve()
-        
-        # Scan the directory tree
-        directory_paths = _scan_directory_recursive(
-            base_path, 
-            parent_path,
-            file_filter,
-            max_depth,
-            current_depth=1,
-            processed_paths=processed_paths
-        )
-        
-        all_paths.extend(directory_paths)
-    
-    # Sort by relative path for consistent output
-    all_paths.sort(key=lambda x: x["relative_path"])
-    
-    logging.info(f"Found {len([p for p in all_paths if p['type'] == 'file'])} files and "
-                f"{len([p for p in all_paths if p['type'] == 'dir'])} directories")
-    
-    return all_paths
-
-
-def _scan_directory_recursive(
-    current_path: Path,
-    parent_for_relative: Path,
-    file_filter: FileFilter,
-    max_depth: Optional[int],
-    current_depth: int,
-    processed_paths: Set[str]
-) -> List[Dict[str, Any]]:
-    """
-    Recursively scan a directory and return matching files/directories.
-    
-    Args:
-        current_path: Current directory being scanned
-        parent_for_relative: Parent path for calculating relative paths
-        file_filter: FileFilter instance
-        max_depth: Maximum depth to traverse
-        current_depth: Current traversal depth
-        processed_paths: Set of already processed paths to avoid duplicates
-        
-    Returns:
-        List of path dictionaries
-    """
-    paths = []
-    
-    # Check depth limit
-    if max_depth is not None and current_depth > max_depth:
-        return paths
-    
-    # Calculate relative path
-    try:
-        relative_path = str(current_path.relative_to(parent_for_relative))
-    except ValueError:
-        relative_path = str(current_path)
-    
-    # Skip if already processed
-    path_key = str(current_path.resolve())
-    if path_key in processed_paths:
-        return paths
-    processed_paths.add(path_key)
-    
-    # Add current directory
-    paths.append({
-        "path": current_path,
-        "relative_path": relative_path,
-        "depth": current_depth,
-        "type": "dir"
-    })
-    
-    try:
-        # Get directory contents
-        with os.scandir(current_path) as entries:
-            # Sort entries for consistent output
-            sorted_entries = sorted(entries, key=lambda e: (e.is_file(), e.name.lower()))
-            
-            for entry in sorted_entries:
-                try:
-                    entry_path = Path(entry.path).resolve()
-                except Exception as e:
-                    logging.warning(f"Could not resolve path {entry.path}: {e}")
-                    continue
-                
-                # Skip if already processed
-                entry_key = str(entry_path)
-                if entry_key in processed_paths:
-                    continue
-                
-                # Calculate relative path for entry
-                try:
-                    entry_relative = str(entry_path.relative_to(parent_for_relative))
-                except ValueError:
-                    entry_relative = str(entry_path)
-                
-                if entry.is_dir():
-                    # Check if directory should be ignored
-                    if not file_filter.should_ignore_directory(entry_path):
-                        # Recursively scan subdirectory
-                        subdir_paths = _scan_directory_recursive(
-                            entry_path,
-                            parent_for_relative,
-                            file_filter,
-                            max_depth,
-                            current_depth + 1,
-                            processed_paths
-                        )
-                        paths.extend(subdir_paths)
-                    else:
-                        logging.debug(f"Ignoring directory: {entry_path}")
-                        
-                elif entry.is_file():
-                    # Check if file should be included
-                    should_include, reason = file_filter.should_include_file(entry_path)
-                    
-                    if should_include:
-                        processed_paths.add(entry_key)
-                        paths.append({
-                            "path": entry_path,
-                            "relative_path": entry_relative,
-                            "depth": current_depth + 1,
-                            "type": "file"
-                        })
-                        logging.debug(f"Including file: {entry_path} ({reason})")
-                    else:
-                        logging.debug(f"Excluding file: {entry_path} ({reason})")
-                        
-    except PermissionError as e:
-        logging.error(f"Permission denied accessing {current_path}: {e}")
-    except Exception as e:
-        logging.error(f"Error scanning {current_path}: {e}")
-    
-    return paths
-
-
-def add_specific_files(
-    path_list: List[Dict[str, Any]],
-    include_files: List[str],
-    base_dir: Path = None
-) -> List[Dict[str, Any]]:
-    """
-    Add specific files to the path list, regardless of filtering rules.
-    
-    Args:
-        path_list: Existing list of path dictionaries
-        include_files: List of file paths to include
-        base_dir: Base directory for resolving relative paths
-        
-    Returns:
-        Updated path list with included files added
-    """
-    if not include_files:
-        return path_list
-    
-    if base_dir is None:
-        base_dir = Path.cwd()
-    
-    # Create set of existing paths for deduplication
-    existing_paths = {str(item["path"].resolve()) for item in path_list}
-    
-    added_count = 0
-    
-    for file_str in include_files:
-        file_str = file_str.strip()
-        if not file_str:
-            continue
-            
-        file_path = Path(file_str)
-        
-        # Handle relative paths
-        if not file_path.is_absolute():
-            file_path = base_dir / file_path
-            
-        try:
-            file_path = file_path.resolve()
-        except Exception as e:
-            logging.warning(f"Could not resolve include file path {file_str}: {e}")
-            continue
-        
-        # Check if file exists and is accessible
-        is_valid, error_msg = validate_file_path(file_path)
-        if not is_valid:
-            logging.warning(f"Cannot include file {file_str}: {error_msg}")
-            continue
-        
-        # Check for duplicates
-        path_key = str(file_path)
-        if path_key in existing_paths:
-            logging.debug(f"File already included: {file_path}")
-            continue
-        
-        # Calculate relative path
-        try:
-            relative_path = str(file_path.relative_to(base_dir))
-        except ValueError:
-            # If file is outside base_dir, use just the filename
-            relative_path = file_path.name
-        
-        # Add to path list
-        path_list.append({
-            "path": file_path,
-            "relative_path": relative_path,
-            "depth": len(file_path.parts) - len(base_dir.parts),
-            "type": "file"
-        })
-        
-        existing_paths.add(path_key)
-        added_count += 1
-        logging.info(f"Added included file: {relative_path}")
-    
-    if added_count > 0:
-        logging.info(f"Added {added_count} specifically included files")
-    
-    return path_list
-
-
-def apply_glob_patterns(
-    directories: List[str],
-    glob_patterns: List[str],
-    file_filter: FileFilter
-) -> List[Dict[str, Any]]:
-    """
-    Find files matching glob patterns within specified directories.
-    
-    Args:
-        directories: List of directory paths to search in
-        glob_patterns: List of glob patterns to match
-        file_filter: FileFilter instance for additional filtering
-        
-    Returns:
-        List of path dictionaries for matching files
-    """
-    if not glob_patterns:
-        return []
-    
-    matching_files = []
-    processed_paths = set()
-    
-    for directory in directories:
-        base_path = Path(directory).resolve()
-        
-        if not base_path.exists() or not base_path.is_dir():
-            logging.warning(f"Invalid directory for glob search: {directory}")
-            continue
-            
-        if file_filter.should_ignore_directory(base_path):
-            logging.debug(f"Skipping ignored directory for glob: {base_path}")
-            continue
-            
-        logging.debug(f"Applying glob patterns in: {base_path}")
-        
-        for pattern in glob_patterns:
-            logging.debug(f"Processing glob pattern: {pattern}")
-            
-            try:
-                # Handle recursive patterns
-                if '**' in pattern:
-                    matches = list(base_path.glob(pattern))
-                else:
-                    matches = list(base_path.glob('**/' + pattern))
-                
-                logging.debug(f"Found {len(matches)} matches for pattern '{pattern}'")
-                
-                for file_path in matches:
-                    if not file_path.is_file():
-                        continue
-                    
-                    # Resolve path
-                    try:
-                        file_path = file_path.resolve()
-                    except Exception as e:
-                        logging.warning(f"Could not resolve glob match {file_path}: {e}")
-                        continue
-                    
-                    # Check for duplicates
-                    path_key = str(file_path)
-                    if path_key in processed_paths:
-                        continue
-                    
-                    # Apply file filter
-                    should_include, reason = file_filter.should_include_file(file_path)
-                    if not should_include:
-                        logging.debug(f"Glob match excluded: {file_path} ({reason})")
-                        continue
-                    
-                    # Calculate relative path
-                    try:
-                        relative_path = str(file_path.relative_to(base_path.parent))
-                    except ValueError:
-                        relative_path = str(file_path)
-                    
-                    matching_files.append({
-                        "path": file_path,
-                        "relative_path": relative_path,
-                        "depth": len(file_path.parts) - len(base_path.parent.parts),
-                        "type": "file"
-                    })
-                    
-                    processed_paths.add(path_key)
-                    logging.debug(f"Added glob match: {file_path}")
-                    
-            except Exception as e:
-                logging.error(f"Error processing glob pattern '{pattern}' in {base_path}: {e}")
-    
-    logging.info(f"Found {len(matching_files)} files matching glob patterns")
-    return matching_files
-
-
 def get_paths(
     directories: List[str] = None,
     extensions: List[str] = None,
@@ -627,3 +277,343 @@ def get_paths(
     logging.info(f"Final result: {file_count} files, {dir_count} directories")
     
     return deduplicated_paths
+
+def scan_directories(
+    directories: List[str],
+    file_filter: FileFilter,
+    max_depth: Optional[int] = None
+) -> List[Dict[str, Any]]:
+    """
+    Scan directories and return all matching files and directories.
+    FIXED: Always uses absolute paths.
+    """
+    if not directories:
+        logging.error("No directories provided for scanning.")
+        return []
+
+    all_paths = []
+    processed_paths = set()
+
+    for base_directory in directories:
+        base_path = Path(base_directory).resolve()  # ALWAYS resolve to absolute
+
+        if not base_path.exists():
+            logging.error(f"Directory does not exist: {base_directory}")
+            continue
+
+        if not base_path.is_dir():
+            logging.error(f"Path is not a directory: {base_directory}")
+            continue
+
+        if file_filter.should_ignore_directory(base_path):
+            logging.info(f"Skipping ignored directory: {base_path}")
+            continue
+
+        logging.info(f"Scanning directory: {base_path}")
+
+        # Scan the directory tree
+        directory_paths = _scan_directory_recursive(
+            base_path,
+            base_path,  # Use base_path as reference for relative paths
+            file_filter,
+            max_depth,
+            current_depth=1,
+            processed_paths=processed_paths
+        )
+
+        all_paths.extend(directory_paths)
+
+    # Sort by relative path for consistent output
+    all_paths.sort(key=lambda x: x["relative_path"])
+
+    logging.info(f"Found {len([p for p in all_paths if p['type'] == 'file'])} files and "
+                f"{len([p for p in all_paths if p['type'] == 'dir'])} directories")
+
+    return all_paths
+
+
+def _scan_directory_recursive(
+    current_path: Path,
+    base_path: Path,  # Reference point for relative paths
+    file_filter: FileFilter,
+    max_depth: Optional[int],
+    current_depth: int,
+    processed_paths: Set[str]
+) -> List[Dict[str, Any]]:
+    """
+    Recursively scan a directory and return matching files/directories.
+    FIXED: Always uses absolute paths.
+    """
+    paths = []
+
+    # Check depth limit
+    if max_depth is not None and current_depth > max_depth:
+        return paths
+
+    # ALWAYS work with absolute paths
+    current_path = current_path.resolve()
+    base_path = base_path.resolve()
+
+    # Calculate relative path for display
+    try:
+        relative_path = str(current_path.relative_to(base_path))
+    except ValueError:
+        relative_path = str(current_path)
+
+    # Skip if already processed
+    path_key = str(current_path)
+    if path_key in processed_paths:
+        return paths
+    processed_paths.add(path_key)
+
+    # Add current directory
+    paths.append({
+        "path": current_path,  # ABSOLUTE PATH
+        "relative_path": relative_path,
+        "depth": current_depth,
+        "type": "dir"
+    })
+
+    try:
+        # Get directory contents
+        with os.scandir(current_path) as entries:
+            # Sort entries for consistent output
+            sorted_entries = sorted(entries, key=lambda e: (e.is_file(), e.name.lower()))
+
+            for entry in sorted_entries:
+                try:
+                    entry_path = Path(entry.path).resolve()  # ALWAYS resolve to absolute
+                except Exception as e:
+                    logging.warning(f"Could not resolve path {entry.path}: {e}")
+                    continue
+
+                # Skip if already processed
+                entry_key = str(entry_path)
+                if entry_key in processed_paths:
+                    continue
+
+                # Calculate relative path for entry
+                try:
+                    entry_relative = str(entry_path.relative_to(base_path))
+                except ValueError:
+                    entry_relative = str(entry_path)
+
+                if entry.is_dir():
+                    # Check if directory should be ignored
+                    if not file_filter.should_ignore_directory(entry_path):
+                        # Recursively scan subdirectory
+                        subdir_paths = _scan_directory_recursive(
+                            entry_path,
+                            base_path,
+                            file_filter,
+                            max_depth,
+                            current_depth + 1,
+                            processed_paths
+                        )
+                        paths.extend(subdir_paths)
+                    else:
+                        logging.debug(f"Ignoring directory: {entry_path}")
+
+                elif entry.is_file():
+                    # Check if file should be included
+                    should_include, reason = file_filter.should_include_file(entry_path)
+
+                    if should_include:
+                        processed_paths.add(entry_key)
+                        paths.append({
+                            "path": entry_path,  # ABSOLUTE PATH
+                            "relative_path": entry_relative,
+                            "depth": current_depth + 1,
+                            "type": "file"
+                        })
+                        logging.debug(f"Including file: {entry_path} ({reason})")
+                    else:
+                        logging.debug(f"Excluding file: {entry_path} ({reason})")
+
+    except PermissionError as e:
+        logging.error(f"Permission denied accessing {current_path}: {e}")
+    except Exception as e:
+        logging.error(f"Error scanning {current_path}: {e}")
+
+    return paths
+
+
+def add_specific_files(
+    path_list: List[Dict[str, Any]],
+    include_files: List[str],
+    base_dir: Path = None
+) -> List[Dict[str, Any]]:
+    """
+    Add specific files to the path list.
+    FIXED: Always uses absolute paths.
+    """
+    if not include_files:
+        return path_list
+
+    if base_dir is None:
+        base_dir = Path.cwd().resolve()
+    else:
+        base_dir = base_dir.resolve()
+
+    # Create set of existing paths for deduplication
+    existing_paths = {str(item["path"]) for item in path_list}
+
+    added_count = 0
+
+    for file_str in include_files:
+        file_str = file_str.strip()
+        if not file_str:
+            continue
+
+        # Try to find the file - simple approach
+        file_path = Path(file_str)
+        found_path = None
+
+        # Try these locations in order
+        candidates = []
+        if file_path.is_absolute():
+            candidates.append(file_path)
+        else:
+            candidates.extend([
+                base_dir / file_path,
+                Path.cwd() / file_path,
+                file_path
+            ])
+
+        # Find the first one that exists
+        for candidate in candidates:
+            try:
+                resolved = candidate.resolve()
+                if resolved.exists() and resolved.is_file():
+                    found_path = resolved
+                    break
+            except Exception:
+                continue
+
+        if found_path is None:
+            logging.error(f"Cannot find include file: {file_str}")
+            continue
+
+        # Validate file accessibility
+        is_valid, error_msg = validate_file_path(found_path)
+        if not is_valid:
+            logging.warning(f"Cannot include file {file_str}: {error_msg}")
+            continue
+
+        # Check for duplicates
+        path_key = str(found_path)
+        if path_key in existing_paths:
+            logging.debug(f"File already included: {found_path}")
+            continue
+
+        # Calculate relative path for display
+        try:
+            relative_path = str(found_path.relative_to(base_dir))
+        except ValueError:
+            # File is outside base_dir, use just the filename or show parent
+            try:
+                relative_path = str(found_path.relative_to(Path.cwd()))
+            except ValueError:
+                relative_path = f"{found_path.parent.name}/{found_path.name}"
+
+        # Add to path list with ABSOLUTE PATH
+        path_list.append({
+            "path": found_path,  # ABSOLUTE PATH
+            "relative_path": relative_path,
+            "depth": 0,
+            "type": "file"
+        })
+
+        existing_paths.add(path_key)
+        added_count += 1
+        logging.info(f"Added included file: {relative_path}")
+
+    if added_count > 0:
+        logging.info(f"Added {added_count} specifically included files")
+
+    return path_list
+
+
+def apply_glob_patterns(
+    directories: List[str],
+    glob_patterns: List[str],
+    file_filter: FileFilter
+) -> List[Dict[str, Any]]:
+    """
+    Find files matching glob patterns within specified directories.
+    FIXED: Always uses absolute paths.
+    """
+    if not glob_patterns:
+        return []
+
+    matching_files = []
+    processed_paths = set()
+
+    for directory in directories:
+        base_path = Path(directory).resolve()  # ALWAYS resolve to absolute
+
+        if not base_path.exists() or not base_path.is_dir():
+            logging.warning(f"Invalid directory for glob search: {directory}")
+            continue
+
+        if file_filter.should_ignore_directory(base_path):
+            logging.debug(f"Skipping ignored directory for glob: {base_path}")
+            continue
+
+        logging.debug(f"Applying glob patterns in: {base_path}")
+
+        for pattern in glob_patterns:
+            logging.debug(f"Processing glob pattern: {pattern}")
+
+            try:
+                # Handle recursive patterns
+                if '**' in pattern:
+                    matches = list(base_path.glob(pattern))
+                else:
+                    matches = list(base_path.glob('**/' + pattern))
+
+                logging.debug(f"Found {len(matches)} matches for pattern '{pattern}'")
+
+                for file_path in matches:
+                    if not file_path.is_file():
+                        continue
+
+                    # ALWAYS resolve to absolute path
+                    try:
+                        file_path = file_path.resolve()
+                    except Exception as e:
+                        logging.warning(f"Could not resolve glob match {file_path}: {e}")
+                        continue
+
+                    # Check for duplicates
+                    path_key = str(file_path)
+                    if path_key in processed_paths:
+                        continue
+
+                    # Apply file filter
+                    should_include, reason = file_filter.should_include_file(file_path)
+                    if not should_include:
+                        logging.debug(f"Glob match excluded: {file_path} ({reason})")
+                        continue
+
+                    # Calculate relative path
+                    try:
+                        relative_path = str(file_path.relative_to(base_path))
+                    except ValueError:
+                        relative_path = str(file_path)
+
+                    matching_files.append({
+                        "path": file_path,  # ABSOLUTE PATH
+                        "relative_path": relative_path,
+                        "depth": len(file_path.parts) - len(base_path.parts),
+                        "type": "file"
+                    })
+
+                    processed_paths.add(path_key)
+                    logging.debug(f"Added glob match: {file_path}")
+
+            except Exception as e:
+                logging.error(f"Error processing glob pattern '{pattern}' in {base_path}: {e}")
+
+    logging.info(f"Found {len(matching_files)} files matching glob patterns")
+    return matching_files    

@@ -489,23 +489,3 @@ def preview_files(
     
     input("\n⏎ Press Enter to continue...")
 
-
-def test_simple_selector():
-    """Test the simple selector functionality."""
-    print("🧪 Testing Simple Selector")
-    
-    result = simple_select_files(
-        start_path=".",
-        preselected_filters=[".py"],
-        included_files=["README.md"]
-    )
-    
-    if result:
-        print("\n✅ Test completed successfully")
-        print(f"Results: {result}")
-    else:
-        print("\n❌ Test cancelled")
-
-
-if __name__ == "__main__":
-    test_simple_selector()

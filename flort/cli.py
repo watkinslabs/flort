@@ -548,6 +548,7 @@ def main() -> None:
     ignore_dirs = parse_ignore_dirs(args.ignore_dirs, directories)
     
 
+    path_list = []  
 
     # Validate arguments
     validation_result = validate_arguments(args)
@@ -633,8 +634,8 @@ def main() -> None:
         
         if only_include_files:
             logging.info("Only processing specifically included files (no directory scanning)")
-            path_list = []
-            path_list = add_specific_files(path_list, include_files, Path(directories[0]))
+            base_dir = Path(directories[0]).resolve() if directories else Path.cwd()
+            path_list = add_specific_files(path_list, include_files, base_dir)
         else:
             path_list = get_paths(
                 directories=directories,

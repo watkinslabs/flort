@@ -140,6 +140,7 @@ def world():
         assert result == absolute.resolve()
 
 
+
 class TestFileFilter:
     """Test suite for FileFilter class."""
     

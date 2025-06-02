@@ -18,7 +18,7 @@ import re
 import argparse
 from pathlib import Path
 from datetime import datetime
-from typing import List, Optional, Tuple
+from typing import List, Optional, Tuple, Dict, Any
 import zipfile
 import tarfile
 import logging
@@ -367,105 +367,133 @@ def archive_file(file_path: str, archive_format: str) -> str:
         return None
 
 
+
 def generate_tree(path_list: list, output: str) -> bool:
     """
     Generate a hierarchical tree structure from a list of paths.
-    
-    Args:
-        path_list (list): List of path dictionaries with 'path', 'relative_path', 'type' keys
-        output (str): Output file path or "stdio"
-        
-    Returns:
-        bool: True if tree generation was successful
+    FIXED: Finds common root and shows tree relative to that.
     """
     if not path_list:
         return write_file(output, "## Directory Tree\n(No files found)\n\n")
-    
+
     # Write header
     if not write_file(output, "## Directory Tree\n"):
         return False
+
+    # Get all file paths (absolute)
+    all_file_paths = [item["path"] for item in path_list if item["type"] == "file"]
     
-    # Build a simple tree structure using a dict
+    if not all_file_paths:
+        return write_file(output, "(No files to display)\n\n")
+
+    # Find the common root directory
+    def find_common_root(paths):
+        """Find the deepest common directory among all paths"""
+        if not paths:
+            return Path.cwd()
+        
+        if len(paths) == 1:
+            return paths[0].parent
+        
+        # Get all the parts for each path's parent directory
+        all_parts = [list(path.parent.parts) for path in paths]
+        
+        # Find common prefix
+        common_parts = []
+        min_length = min(len(parts) for parts in all_parts)
+        
+        for i in range(min_length):
+            if all(parts[i] == all_parts[0][i] for parts in all_parts):
+                common_parts.append(all_parts[0][i])
+            else:
+                break
+        
+        # Create path from common parts
+        if common_parts:
+            # Handle edge cases
+            if len(common_parts) == 1:
+                # If only root or drive letter, use parent of first file
+                if common_parts[0] in ['/', 'C:', 'D:', 'E:'] or len(common_parts[0]) <= 3:
+                    return paths[0].parent
+            
+            return Path(*common_parts)
+        else:
+            # No common path, use parent of first file
+            return paths[0].parent
+
+    common_root = find_common_root(all_file_paths)
+    
+    # Build tree structure relative to common root
     tree = {}
     
-    # Add all paths to the tree
-    for item in path_list:
-        rel_path = item["relative_path"]
-        item_type = item["type"]
-        
-        # Normalize the path - remove leading ./ 
-        if rel_path.startswith('./'):
-            rel_path = rel_path[2:]
-        
-        # Skip empty paths or current directory
-        if not rel_path or rel_path == '.':
-            continue
+    for file_path in all_file_paths:
+        try:
+            # Calculate path relative to common root
+            rel_path = file_path.relative_to(common_root)
+            parts = list(rel_path.parts)
             
-        # Split path into parts
-        parts = rel_path.split('/')
-        
-        # Navigate/create the tree structure
-        current = tree
-        for i, part in enumerate(parts):
-            if part not in current:
-                current[part] = {}
-            
-            # If this is the last part, mark if it's a file
-            if i == len(parts) - 1 and item_type == "file":
-                current[part]["__is_file__"] = True
-            else:
-                current = current[part]
-    
+            # Add to tree
+            current = tree
+            for i, part in enumerate(parts):
+                if part not in current:
+                    current[part] = {}
+                
+                # Mark as file if it's the last part
+                if i == len(parts) - 1:
+                    current[part]["__is_file__"] = True
+                else:
+                    current = current[part]
+                    
+        except ValueError:
+            # File is outside common root somehow, add with warning
+            logging.warning(f"File {file_path} is outside common root {common_root}")
+            # Add it with its full name as a top-level item
+            filename = f"{file_path.parent.name}_{file_path.name}"
+            tree[filename] = {"__is_file__": True}
+
     # Function to recursively print the tree
     def print_tree_recursive(node, prefix="", is_last=True):
         items = [(k, v) for k, v in node.items() if k != "__is_file__"]
-        items.sort(key=lambda x: (x[1].get("__is_file__", False), x[0].lower()))
         
+        # Sort: directories first, then files, alphabetically
+        items.sort(key=lambda x: (x[1].get("__is_file__", False), x[0].lower()))
+
         for i, (name, subtree) in enumerate(items):
             is_last_item = (i == len(items) - 1)
             
-            # Determine the connector
-            if prefix == "":  # Root level
-                connector = "├── " if not is_last_item else "└── "
-            else:
-                connector = "├── " if not is_last_item else "└── "
+            # Determine connector
+            connector = "└── " if is_last_item else "├── "
             
-            # Determine if this is a file or directory
+            # Format name
             is_file = subtree.get("__is_file__", False)
             display_name = name if is_file else name + "/"
             
-            # Write the line
+            # Write line
             line = f"{prefix}{connector}{display_name}\n"
             if not write_file(output, line):
                 return False
             
             # Recurse for directories
             if not is_file and subtree:
-                # Determine the new prefix
-                if prefix == "":  # Root level
-                    new_prefix = "│   " if not is_last_item else "    "
-                else:
-                    new_prefix = prefix + ("│   " if not is_last_item else "    ")
-                
-                if not print_tree_recursive(subtree, new_prefix, is_last_item):
+                new_prefix = prefix + ("    " if is_last_item else "│   ")
+                if not print_tree_recursive(subtree, new_prefix):
                     return False
         
         return True
+
+    # Print root name (use common root's name, or "project" if it's too generic)
+    root_name = common_root.name
+    if not root_name or root_name in ['/', '.', '..'] or len(root_name) <= 1:
+        root_name = "project"
     
-    # Get the current directory name for the root
-    cwd = Path.cwd()
-    root_name = cwd.name
-    
-    # Print root directory name
     if not write_file(output, f"{root_name}/\n"):
         return False
-    
+
     # Print the tree
     if not print_tree_recursive(tree):
         return False
-    
-    return write_file(output, "\n")
 
+    return write_file(output, "\n")
 
 def validate_file_path(file_path: Path) -> Tuple[bool, str]:
     """

@@ -46,6 +46,68 @@ class ValidationResult:
             return None
         return "\n".join(f"❌ {detail}" for detail in self.error_details)
 
+def validate_include_files(args: argparse.Namespace) -> Tuple[List[str], List[str]]:
+    """
+    Validate specific include files and return errors and warnings.
+    
+    Returns:
+        Tuple of (errors, warnings)
+    """
+    errors = []
+    warnings = []
+    
+    if not args.include_files:
+        return errors, warnings
+        
+    include_files = parse_comma_separated_list(args.include_files)
+    base_dir = Path(args.directories[0]) if args.directories else Path.cwd()
+    
+    for file_path in include_files:
+        if not file_path.strip():
+            continue
+
+        # Try multiple resolution strategies
+        file_obj = Path(file_path)
+        resolution_attempts = []
+        
+        if file_obj.is_absolute():
+            resolution_attempts.append(file_obj)
+        else:
+            resolution_attempts.extend([
+                base_dir / file_obj,
+                Path.cwd() / file_obj,
+                file_obj
+            ])
+
+        found = False
+        for attempt in resolution_attempts:
+            try:
+                resolved = attempt.resolve()
+                if resolved.exists():
+                    if resolved.is_file():
+                        # Check if readable
+                        try:
+                            with open(resolved, 'r', encoding='utf-8', errors='replace') as f:
+                                f.read(1)
+                            found = True
+                            break
+                        except Exception as e:
+                            errors.append(f"Include file is not readable: {file_path} ({e})")
+                            found = True  # Don't try other paths
+                            break
+                    else:
+                        errors.append(f"Include path is not a file: {file_path}")
+                        found = True
+                        break
+            except Exception:
+                continue
+                
+        if not found:
+            errors.append(f"Include file does not exist: {file_path}")
+            
+    return errors, warnings
+    
+
 def validate_arguments(args: argparse.Namespace) -> ValidationResult:
     """
     Validate command line arguments for consistency and correctness.
