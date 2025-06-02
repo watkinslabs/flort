@@ -1,0 +1,135 @@
+name: 🐛 Bug Report
+description: File a bug report to help us improve Flort
+title: "[Bug]: "
+labels: ["bug", "triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to fill out this bug report! Please provide as much detail as possible.
+
+  - type: checkboxes
+    id: terms
+    attributes:
+      label: Pre-submission Checklist
+      description: Please verify these before submitting
+      options:
+        - label: I have searched existing issues to avoid duplicates
+          required: true
+        - label: I have tested with the latest version of Flort
+          required: true
+        - label: I have read the [documentation](https://watkinslabs.github.io/flort/)
+          required: false
+
+  - type: input
+    id: version
+    attributes:
+      label: Flort Version
+      description: What version of Flort are you running?
+      placeholder: "e.g., 2.0.0 (get with: flort --version)"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: os
+    attributes:
+      label: Operating System
+      description: What operating system are you using?
+      options:
+        - Linux (Ubuntu/Debian)
+        - Linux (CentOS/RHEL/Fedora)
+        - Linux (Other)
+        - macOS
+        - Windows 10
+        - Windows 11
+        - Other
+    validations:
+      required: true
+
+  - type: input
+    id: python-version
+    attributes:
+      label: Python Version
+      description: What version of Python are you using?
+      placeholder: "e.g., 3.9.7 (get with: python --version)"
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Bug Description
+      description: A clear and concise description of what the bug is
+      placeholder: Tell us what happened!
+    validations:
+      required: true
+
+  - type: textarea
+    id: command
+    attributes:
+      label: Command Used
+      description: The exact flort command that triggered the bug
+      placeholder: "flort . --extensions py --output project.txt"
+      render: bash
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected Behavior
+      description: What did you expect to happen?
+      placeholder: Describe the expected behavior
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual Behavior
+      description: What actually happened? Include error messages if any.
+      placeholder: Describe what actually happened
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Steps to Reproduce
+      description: How can we reproduce this issue?
+      placeholder: |
+        1. Run command '...'
+        2. See error '...'
+        3. ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment Details
+      description: Additional environment information
+      placeholder: |
+        - Shell: bash/zsh/cmd/powershell
+        - Terminal: Terminal.app/iTerm2/Windows Terminal/etc.
+        - Virtual environment: venv/conda/none
+        - Installation method: pip/git clone/other
+    validations:
+      required: false
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Verbose Output
+      description: If applicable, run with --verbose and paste the output
+      placeholder: "Output from: flort [your command] --verbose"
+      render: text
+    validations:
+      required: false
+
+  - type: textarea
+    id: additional
+    attributes:
+      label: Additional Context
+      description: Any other context about the problem
+      placeholder: Screenshots, related issues, configuration files, etc.

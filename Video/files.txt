@@ -1,0 +1,9 @@
+file 'temp/seg_1_with_audio.mp4'
+file 'temp/seg_2_with_audio.mp4'
+file 'temp/seg_3_with_audio.mp4'
+file 'temp/seg_4_with_audio.mp4'
+file 'temp/seg_5_with_audio.mp4'
+file 'temp/seg_6_with_audio.mp4'
+file 'temp/seg_7_with_audio.mp4'
+file 'temp/seg_8_fixed-2.mp4'
+

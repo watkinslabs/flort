@@ -1,0 +1,61 @@
+Funny Video Script for Flort (8-Second Segments)
+Segment 1 (0:00 - 0:08) – Flort: What’s in a Name?
+Visuals: A cartoon of a confused developer typing “Flort” into a terminal.
+Voiceover:
+"Flort? Sounds like a sneeze. But no, it’s actually a text dumper for your code!"
+Text on Screen:
+"Flort: Bless You!"
+Segment 2 (0:08 - 0:16) – The Problem
+Visuals: Files flying out of a folder and hitting a developer in the face.
+Voiceover:
+"Too many files making you lose your mind? Don’t worry, Flort’s got this."
+Text on Screen:
+"Files Everywhere? Flort It!"
+Segment 3 (0:16 - 0:24) – What Flort Does
+Visuals: A dramatic montage of Flort in action: files get sucked into a terminal, and out comes a single blob file with “BLOBBED” stamped on it.
+Voiceover:
+"Flort smooshes all your files into one giant blob. Magic? Nope. It’s Flort."
+Text on Screen:
+"Flort: Smooshing Files Since 2025."
+Segment 4 (0:24 - 0:32) – How It Works
+Visuals: A terminal command: flort . --output=blob.txt. A blob icon appears with googly eyes and a smile.
+Voiceover:
+"Just point it at your files, and FLORT! It’s blobbed."
+Text on Screen:
+"Blobbing Made Easy."
+Segment 5 (0:32 - 0:40) – Perfect for AI Prep
+Visuals: A robot with a fork and knife excitedly “eating” a blob file labeled "Flort Output."
+Voiceover:
+"AI needs data? Feed it a delicious Flort blob. It’s nutritious AND efficient!"
+Text on Screen:
+"Flort: Blob Your Files. Feed Your AI."
+Segment 6 (0:40 - 0:48) – Installation
+Visuals: Terminal command: pip install flort. Confetti bursts from the terminal.
+Voiceover:
+"Install Flort in seconds. It’s as easy as sneezing. Achoo—I mean, pip install flort."
+Text on Screen:
+"pip install flort: Gesundheit!"
+Segment 7 (0:48 - 0:56) – Simplicity
+Visuals: A developer naps peacefully as Flort runs in the background.
+Voiceover:
+"No bells. No whistles. Just your files, smooshed. That’s the Flort way."
+Text on Screen:
+"Flort: Simple. Silly. Effective."
+Segment 8 (0:56 - 1:04) – Why Flort?
+Visuals: A cartoon blob wearing sunglasses with text: “I’m a Flort!”
+Voiceover:
+"Why Flort? Because naming it FileMerger2025 was boring. Flort is fun."
+Text on Screen:
+"Flort: It’s Fun to Say!"
+Segment 9 (1:04 - 1:12) – Results
+Visuals: A before-and-after of cluttered files vs. a neat blob file, with a comedic “TA-DA!” sound effect.
+Voiceover:
+"Your files are one blob away from organization. Flort: because chaos is overrated."
+Text on Screen:
+"Flort Your Files. Save Your Sanity."
+Segment 10 (1:12 - 1:30) – Call to Action
+Visuals: Flort’s “BLOBBED” stamp hitting the screen with a link to GitHub.
+Voiceover:
+"Ready to Flort? Download it now and smoosh your way to productivity!"
+Text on Screen:
+"Visit [Your Link Here]. Flort It Up!"
