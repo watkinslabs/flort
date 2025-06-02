@@ -1,16 +1,7 @@
-# Flort Project Dependencies
-# This file is mainly for development and CI/CD
-
-# Core dependencies (also in setup.py)
-# No additional dependencies for core functionality
-
-# Development dependencies
-pytest>=6.0
-pytest-cov>=2.0
-black>=22.0
-flake8>=4.0
-isort>=5.0
-mypy>=0.900
-
-# Documentation dependencies
--r docs/requirements.txt
+mkdocs>=1.5.0
+mkdocs-material>=9.4.0
+mkdocs-minify-plugin>=0.7.0
+mkdocstrings[python]>=0.24.0
+mkdocs-autorefs>=0.5.0
+griffe>=0.38.0
+pymdown-extensions>=10.0
