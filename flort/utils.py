@@ -18,7 +18,7 @@ import re
 import argparse
 from pathlib import Path
 from datetime import datetime
-from typing import List, Optional
+from typing import List, Optional, Tuple
 import zipfile
 import tarfile
 import logging
