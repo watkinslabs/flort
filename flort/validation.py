@@ -61,7 +61,12 @@ def validate_arguments(args: argparse.Namespace) -> ValidationResult:
     warnings = []
     
     # Validate we have something to process - BUT skip this check if using UI
-    if not args.ui and not args.extensions and not args.all and not args.glob:
+    if not args.ui \
+        and not args.extensions \
+        and not args.all  \
+        and not args.glob \
+        and not args.include_files:
+
         errors.append(ValidationError.NO_INCLUSION_CRITERIA)
         error_details.append("No extensions or glob provided and --all flag not set. No files to process. "
                            "Use --extensions, --glob, --include-files, --all, or --ui to specify what to include.")
