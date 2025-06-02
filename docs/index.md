@@ -1,15 +1,19 @@
 # Welcome to Flort
 
-<div align="center">
-  <img src="https://raw.githubusercontent.com/watkinslabs/flort/main/assets/flort-logo.svg" alt="Flort Logo" width="400">
-  
-  **File Concatenation and Project Overview Tool**
-  
-  [![Python Version](https://img.shields.io/badge/python-3.6+-blue.svg)](https://python.org)
-  [![PyPI Version](https://img.shields.io/pypi/v/flort.svg)](https://pypi.org/project/flort/)
-  [![License](https://img.shields.io/badge/license-BSD--3--Clause-green.svg)](https://github.com/watkinslabs/flort/blob/main/LICENSE)
-  [![Tests](https://github.com/watkinslabs/flort/workflows/Tests/badge.svg)](https://github.com/watkinslabs/flort/actions)
-</div>
+# Flort
+
+<p align="center">
+  <img src="https://raw.githubusercontent.com/watkinslabs/flort/main/assets/flort-logo.png" alt="Flort Logo" width="400">
+</p>
+
+<p align="center"><strong>File Concatenation and Project Overview Tool</strong></p>
+
+<p align="center">
+  <a href="https://python.org"><img src="https://img.shields.io/badge/python-3.6+-blue.svg" alt="Python Version"></a>
+  <a href="https://pypi.org/project/flort/"><img src="https://img.shields.io/pypi/v/flort.svg" alt="PyPI Version"></a>
+  <a href="https://github.com/watkinslabs/flort/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-BSD--3--Clause-green.svg" alt="License"></a>
+  <a href="https://github.com/watkinslabs/flort/actions"><img src="https://github.com/watkinslabs/flort/workflows/Tests/badge.svg" alt="Tests"></a>
+</p>
 
 Flort is a powerful command-line tool designed to create consolidated views of your project's source code by combining multiple files into a single output file. It's perfect for preparing code context for Large Language Models (LLMs), generating documentation, and analyzing project structure.
 
