@@ -1,4 +1,3 @@
-# Welcome to Flort
 <p align="center">
   <img src="https://raw.githubusercontent.com/watkinslabs/flort/main/assets/flort-logo.png" alt="Flort Logo" width="200">
 </p>
