@@ -4,7 +4,7 @@ import logging
 from enum import Enum
 from pathlib import Path
 from dataclasses import dataclass
-from typing import List, Optional
+from typing import List, Optional, Tuple
 
 from .utils import parse_comma_separated_list, parse_ignore_dirs
 
@@ -251,7 +251,7 @@ def validate_arguments(args: argparse.Namespace) -> ValidationResult:
         args: Parsed command line arguments
         
     Returns:
-        tuple: (is_valid, error_message)
+        tuple: (is_valids, error_message)
     """
     errors = []
     
