@@ -1,6 +1,6 @@
-site_name: Flort Documentation
-site_description: File Concatenation and Project Overview Tool for LLM preparation
-site_author: Chris Watkins
+site_name: Flort by Watkins Labs
+site_description: Professional file concatenation and project overview tool for AI workflows and enterprise development
+site_author: Chris Watkins - Watkins Labs
 site_url: https://watkinslabs.github.io/flort/
 
 # Repository
@@ -9,7 +9,7 @@ repo_url: https://github.com/watkinslabs/flort
 edit_uri: edit/main/docs/
 
 # Copyright
-copyright: Copyright &copy; 2025 Chris Watkins
+copyright: Copyright &copy; 2025 Chris Watkins - Watkins Labs. All rights reserved.
 
 # Configuration
 theme:
@@ -17,22 +17,25 @@ theme:
   palette:
     # Palette toggle for light mode
     - scheme: default
-      primary: blue
-      accent: light blue
+      primary: custom
+      accent: custom
       toggle:
         icon: material/brightness-7
         name: Switch to dark mode
     # Palette toggle for dark mode
     - scheme: slate
-      primary: blue
-      accent: light blue
+      primary: custom
+      accent: custom
       toggle:
         icon: material/brightness-4
         name: Switch to light mode
   
   font:
-    text: Roboto
-    code: Roboto Mono
+    text: IBM Plex Sans
+    code: IBM Plex Mono
+    
+  logo: assets/flort-logo.png
+  favicon: assets/flort-logo.png
   
   features:
     - announce.dismiss
@@ -118,16 +121,25 @@ extra:
   social:
     - icon: fontawesome/brands/github
       link: https://github.com/watkinslabs/flort
+      name: View source on GitHub
     - icon: fontawesome/brands/python
       link: https://pypi.org/project/flort/
+      name: Download from PyPI
     - icon: fontawesome/solid/paper-plane
       link: mailto:chris@watkinslabs.com
+      name: Contact Chris Watkins
+    - icon: fontawesome/solid/building
+      link: https://watkinslabs.com
+      name: Watkins Labs
   
   version:
     provider: mike
     default: stable
   
   generator: false
+  
+extra_css:
+  - stylesheets/custom.css
 
 # Extensions
 markdown_extensions:
@@ -195,8 +207,12 @@ nav:
     - Use Cases & Examples: examples.md
   - API Reference:
     - Overview: api/overview.md
+    - Core API: api/core.md
+    - File Operations: api/files.md
+    - Utilities: api/utils.md
   - Development:
     - Contributing: contributing.md
+    - Changelog: changelog.md
   - Support:
     - Troubleshooting: troubleshooting.md
 

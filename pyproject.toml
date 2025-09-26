@@ -1,0 +1,85 @@
+[build-system]
+requires = ["setuptools>=64", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "flort"
+dynamic = ["version"]
+description = "File Concatenation and Project Overview Tool for LLM preparation"
+readme = "README.md"
+license = {text = "BSD-3-Clause"}
+authors = [
+    {name = "Chris Watkins", email = "chris@watkinslabs.com"}
+]
+keywords = ["file concatenation", "project overview", "LLM preparation", "code analysis", "documentation"]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Environment :: Console",
+    "Environment :: Console :: Curses",
+    "Intended Audience :: Developers",
+    "Intended Audience :: System Administrators",
+    "License :: OSI Approved :: BSD License",
+    "Operating System :: OS Independent",
+    "Operating System :: POSIX :: Linux",
+    "Operating System :: Microsoft :: Windows",
+    "Operating System :: MacOS",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.6",
+    "Programming Language :: Python :: 3.7",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Documentation",
+    "Topic :: Software Development :: Documentation",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Topic :: System :: Archiving",
+    "Topic :: Text Processing",
+    "Topic :: Utilities",
+]
+requires-python = ">=3.6"
+dependencies = [
+    "windows-curses; platform_system=='Windows'",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=6.0",
+    "pytest-cov>=2.0",
+    "mkdocs-material>=9.0",
+]
+docs = [
+    "mkdocs-material>=9.0",
+    "mkdocs-minify-plugin>=0.7",
+    "mkdocstrings[python]>=0.20",
+]
+
+[project.scripts]
+flort = "flort.wrapper:main"
+
+[project.urls]
+Homepage = "https://github.com/watkinslabs/flort"
+Documentation = "https://watkinslabs.github.io/flort"
+Repository = "https://github.com/watkinslabs/flort.git"
+"Bug Tracker" = "https://github.com/watkinslabs/flort/issues"
+Discussions = "https://github.com/watkinslabs/flort/discussions"
+Changelog = "https://github.com/watkinslabs/flort/blob/main/CHANGELOG.md"
+Logo = "https://raw.githubusercontent.com/watkinslabs/flort/main/assets/flort-logo.png"
+
+[tool.setuptools]
+packages = ["flort"]
+include-package-data = true
+zip-safe = false
+
+[tool.setuptools.package-data]
+flort = [
+    "assets/*.png",
+    "assets/*.svg", 
+    "assets/*.ico",
+    "assets/logo.*",
+]
+
+[tool.setuptools.dynamic]
+version = {file = "VERSION"}
